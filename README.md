@@ -1,6 +1,6 @@
 # Assess_Industrial-base
 
-scrape_SEC_10K_reports.py pulls sentences from a company's 10-K filling. 
+scrape_SEC_10K_report.py pulls sentences from a company's 10-K filling. 
 
 At the top of the .py file, change the 'company' name and 'words_to_find' to pull the information interested in.
 
