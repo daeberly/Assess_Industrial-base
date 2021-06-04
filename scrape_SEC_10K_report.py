@@ -22,8 +22,8 @@ import requests
 # company name is case sensitive - look it up on SEC website
 # https://www.sec.gov/edgar/searchedgar/companysearch.html
 
-company = 'Leidos Holdings, Inc.'
-words_to_find = 'COVID-19'
+company = 'LOCKHEED MARTIN CORP'
+words_to_find = 'raw materials'
     # Examples: COVID-19, supply chain, risks, raw materials, workforce, China,
     # primary customer, contracts with the U.S. government
 
@@ -32,7 +32,7 @@ words_to_find = 'COVID-19'
 #
 
 # parameters ... may need USER adjustments
-filing = '10-Q'
+filing = '10-K'
 year = 2021         
 quarter = 'QTR1'    
 
@@ -42,6 +42,7 @@ download = download.decode("utf-8").split('\n')
 
 # finds the report for a specific company &
 # makes the url to access that report
+
 for item in download:
   #company name and report type
   if (company in item) and (filing in item): 
@@ -50,7 +51,7 @@ for item in download:
     entry = entry.strip()
     split_entry = entry.split('|')
     url = split_entry[-1]
-    #print(url) # edgar/data/936468/0000936468-21-000013.txt
+    print(url) # edgar/data/936468/0000936468-21-000013.txt
 
 url2 = url.split('-') 
 url2 = url2[0] + url2[1] + url2[2]
@@ -88,3 +89,4 @@ for tag in soup.div.find_all_next('span'):  # spans are parts of the html webdoc
       sentences = nltk.sent_tokenize(tag)
       result = [sentence for sentence in sentences]
       print(result, '\n ****')
+      
