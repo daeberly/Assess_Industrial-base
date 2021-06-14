@@ -62,6 +62,10 @@ stock_info.columns
 stock_info = stock_info.reset_index() 
 stock_info = stock_info.set_index(['Date', 'ticker'])
 
+# check for duplicates
+check=stock_info.index.duplicated()
+print('\nNumber of Duplicates:',check.sum())
+
 # ready for .groupby()
 
 sample = stock_info.sample(1000)
