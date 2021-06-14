@@ -14,35 +14,34 @@ def Sec_10Ks(companies, key_words):
 
 import bs4 as bs    # BeautifulSoup to scrape web data
 import requests
+import nltk    # nltk is natural language tool kit
 
 #
 ## 1. USER INPUT: Change the Company name & info you'd like
 #
 
-# company name is case sensitive - look it up on SEC website
 # https://www.sec.gov/edgar/searchedgar/companysearch.html
+company = 'LOCKHEED MARTIN CORP' # company name is case sensitive - look it up on SEC website
 
-company = 'LOCKHEED MARTIN CORP'
-words_to_find = 'raw materials'
+words_to_find = 'repurchase'
     # Examples: COVID-19, supply chain, risks, raw materials, workforce, China,
     # primary customer, contracts with the U.S. government
+
+filing = '10-Q'    # options: '10-K', '10-Q', etc...
+year = 2021         
+quarter = 'QTR2'
+
 
 #
 ## 2. Build url to get the SEC report 
 #
-
-# parameters ... may need USER adjustments
-filing = '10-K'
-year = 2021         
-quarter = 'QTR1'    
-
+    
 # get a list with all SEC reports 
 download = requests.get(f'https://www.sec.gov/Archives/edgar/full-index/{year}/{quarter}/master.idx').content
 download = download.decode("utf-8").split('\n')
 
 # finds the report for a specific company &
 # makes the url to access that report
-
 for item in download:
   #company name and report type
   if (company in item) and (filing in item): 
@@ -51,7 +50,7 @@ for item in download:
     entry = entry.strip()
     split_entry = entry.split('|')
     url = split_entry[-1]
-    print(url) # edgar/data/936468/0000936468-21-000013.txt
+    print('url', url) # edgar/data/936468/0000936468-21-000013.txt
 
 url2 = url.split('-') 
 url2 = url2[0] + url2[1] + url2[2]
@@ -66,7 +65,7 @@ data = data.split('FILENAME>')  # split the file in half after this
 data = data[1].split('\n')[0]   # split 2nd half after the line break & keep the filename
 
 url_to_use = 'https://www.sec.gov/Archives/'+ url2 + '/'+data
-print('SEC report website:', url_to_use)
+print('\nSEC report website:', url_to_use)
 
 # get the desired SEC report 
 resp = requests.get(url_to_use)
@@ -76,11 +75,15 @@ soup = bs.BeautifulSoup(resp.text, 'lxml')
 ## 3. Extract specific sentences from SEC Report
 #
 
-import nltk    # nltk is natural language tool kit
+
+# Only need this once to download tool kit
 nltk.download('punkt')
 
-print('\n****\n' + str(year) +' SEC ' + filing + ' report for ' + company +"\nBelow excerpts related to '" + words_to_find + "'\n")
+# Output Header
+print('\n****\n' + str(year) +' SEC ' + filing + ' report for ' + company)
+print("\nExcerpts below related to '" + words_to_find + "'.\n")
 
+# Sentences related to target words
 for tag in soup.div.find_all_next('span'):  # spans are parts of the html webdoc
     #print(type(tag))
     tag = tag.getText()
@@ -90,3 +93,20 @@ for tag in soup.div.find_all_next('span'):  # spans are parts of the html webdoc
       result = [sentence for sentence in sentences]
       print(result, '\n ****')
       
+print('End of search.')
+
+#%%
+
+
+acct_pay_ratio = (14072/((1889+880)/2))
+duration = 87
+
+acct_pay_ratio_days = duration / acct_pay_ratio
+print('Accounts payable ratio:', acct_pay_ratio)
+print('Accounts payable ratio in days:', acct_pay_ratio_days)
+
+invest_previousQ = 295
+invest_thisQ = 169
+
+diff = invest_thisQ - invest_previousQ
+print('Net cash investments to previous FY Quarter: $', diff, 'million')
