@@ -148,12 +148,28 @@ print('\nFinancial Measures:', DIB_Financials.columns.to_list())
 sample = DIB_Financials.sample(100)
 sample.to_csv(str(current) + '_sample_DIB_Financials.csv')
 
-end = time.time()
 print('\n Great Success! \nTotal Processing Time:', round(end-start,2), 'seconds\n')
-
 #%%
 
-# PLOTS....
+#
+# Ratio Calculations
+#
+# / means divided by
+
+#
+# Accounts Payable Turnover 
+    # number of times debt can be paid off per period
+
+# APT_ratio = 'CostOfRevenue' / (average of 'AccountsPayable' current & previous quarter)
+
+
+#
+# Accounts Payable Turnover Days
+    # how many days to payoff debts
+
+# APT_days_ratio = days in period(date current - date previous) / APT Ratio
+
+
 
 #%%
 '''
@@ -213,3 +229,7 @@ for file in glob.glob(path, recursive = False):
     # {'ttm':time.ctime(os.path.getctime(file))} #ttm = trailing 12 months   
 
 '''
+#%%
+
+end = time.time()
+print('\nGreat Success! \nTotal Processing Time:', round(end-start,2), 'seconds\n')
