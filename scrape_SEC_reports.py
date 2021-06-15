@@ -1,3 +1,7 @@
+# Created: 6-3-2021
+# GitHub Repository: Assess_Industrial-bas
+# https://github.com/daeberly/Assess_Industrial-base
+
 
 #
 # Scrap text from SEC reports
@@ -21,14 +25,14 @@ import nltk    # nltk is natural language tool kit
 #
 
 # https://www.sec.gov/edgar/searchedgar/companysearch.html
-company = 'LOCKHEED MARTIN CORP' # company name is case sensitive - look it up on SEC website
+company = 'RAYTHEON TECHNOLOGIES CORP' # company name is case sensitive - look it up on SEC website
 
-words_to_find = 'repurchase'
+words_to_find = 'research and development'
     # Examples: COVID-19, supply chain, risks, raw materials, workforce, China,
     # primary customer, contracts with the U.S. government
 
 filing = '10-Q'    # options: '10-K', '10-Q', etc...
-year = 2021         
+year = 2020         
 quarter = 'QTR2'
 
 
@@ -77,7 +81,7 @@ soup = bs.BeautifulSoup(resp.text, 'lxml')
 
 
 # Only need this once to download tool kit
-nltk.download('punkt')
+#nltk.download('punkt')
 
 # Output Header
 print('\n****\n' + str(year) +' SEC ' + filing + ' report for ' + company)
@@ -97,16 +101,11 @@ print('End of search.')
 
 #%%
 
+#
+# Create report (.pdf)
+# 
 
-acct_pay_ratio = (14072/((1889+880)/2))
-duration = 87
+#pip install reportlab
+from reportlab.pdfgen import canvas
 
-acct_pay_ratio_days = duration / acct_pay_ratio
-print('Accounts payable ratio:', acct_pay_ratio)
-print('Accounts payable ratio in days:', acct_pay_ratio_days)
-
-invest_previousQ = 295
-invest_thisQ = 169
-
-diff = invest_thisQ - invest_previousQ
-print('Net cash investments to previous FY Quarter: $', diff, 'million')
+filename = company + 'SEC_report'

@@ -94,7 +94,7 @@ for file in glob.glob(path, recursive = False):
     rename = {'name': 'Date'}
     raw_data.rename(columns= rename, inplace= True)
         # prep string values for data type conversion
-    sub_in = {',':'','nan':np.nan}     
+    sub_in = {',':''}     
     raw_data = raw_data.replace(sub_in, regex=True)
         # delete 'ttm' entries - trailing 12 months (ttm) will skew data
     raw_data = raw_data[~raw_data.Date.str.contains('ttm')]
@@ -120,14 +120,17 @@ for file in glob.glob(path, recursive = False):
 # remove all tabs '\t' from column header names
 DIB_Financials.columns = DIB_Financials.columns.str.strip()
 
+# remove seconds from date column
+DIB_Financials['Date']= DIB_Financials['Date'].dt.date
+
 # set index
 DIB_Financials = DIB_Financials.set_index(['Date','ticker'])
 
 # check for duplicates
-check=stock_info.index.duplicated()
+check = DIB_Financials.index.duplicated()
 print('\nNumber of Duplicates:',check.sum())
       
-print('\nFinancial Measures:', DIB_Financials.columns.to_list())
+#print('\nFinancial Measures:', DIB_Financials.columns.to_list())
 
 
 # ready for .groupby()
@@ -156,6 +159,7 @@ print('\nMeasures dataframe shape:', measures.shape)
 
 
 # export to .pkl file
+measures.to_pickle("measures.pkl")
 
 
     
