@@ -38,7 +38,24 @@ start = pd.to_datetime('2011-03-31 00:00:00')
 end = pd.to_datetime('2021-03-31 00:00:00')
 
 measures_ten = measures.loc[(('index < @start or index > @end')                            ​
-                             
+
+#
+# should this go in financials.py?
+#
+
+# import R&D data 
+RD_data = pd.read_csv('R&D_data.csv')
+RD_data.dtypes
+
+    # set datetime format
+date_type = {'Date': 'datetime64','ticker':str, 'filing':str}
+RD_data = RD_data.astype(date_type)
+RD_data['Date']= RD_data['Date'].dt.date
+
+    # merge RD_data w/ measures by date & ticker
+
+
+
 #%%
 
 
