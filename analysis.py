@@ -22,8 +22,23 @@ import seaborn as sns
 start = time.time()
 
 # import pickle file
+measures=pd.read_pickle("measures.pkl.zip")
 
+# Create ROE, ROA, ROI Variables
+measures["ROA"] = measures["NetIncome"]/measures["TotalAssets"]
+measures["ROE"] = measures["NetIncome"]/measures["StockholdersEquity"]
+print(measures["ROA"].value_counts())
 
+# Duplicate problem
+print(measures.iloc[[311]])
+print(measures.iloc[[270]])
+
+# isolate last ten years
+start = pd.to_datetime('2011-03-31 00:00:00')
+end = pd.to_datetime('2021-03-31 00:00:00')
+
+measures_ten = measures.loc[(('index < @start or index > @end')                            ​
+                             
 #%%
 
 

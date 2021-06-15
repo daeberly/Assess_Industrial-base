@@ -43,8 +43,9 @@ current = datetime.date.today()
 #pip install yfinance
 import yfinance as yf
 
-companies = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX']#,'SPX', 'SPSIAD']
-    # SPX = S&P 500 index.  SPIAD = S&P 500 Aerospace & Defense Index
+companies = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX','SPX', 'SPSIAD']
+    # SPX = S&P 500 index.  
+    # SPIAD = S&P 500 Aerospace & Defense Index
 
 stock_info = pd.DataFrame()
 
@@ -61,8 +62,10 @@ stock_info.columns
 stock_info = stock_info.reset_index() 
 stock_info = stock_info.set_index(['Date', 'ticker'])
 
-# ready for .groupby()
+# export to .pkl
+stock_info.to_pickle('stock_info.pkl.zip')
 
+# sample
 sample = stock_info.sample(1000)
 sample.to_csv(str(current) + '_sample_stock_info.csv')
     
@@ -129,12 +132,6 @@ DIB_Financials = DIB_Financials.set_index(['Date','ticker'])
 # check for duplicates
 check = DIB_Financials.index.duplicated()
 print('\nNumber of Duplicates:',check.sum())
-      
-#print('\nFinancial Measures:', DIB_Financials.columns.to_list())
-
-
-# ready for .groupby()
-
 
 # export sample to .csv
 sample = DIB_Financials.sample(frac= 0.1)
@@ -158,8 +155,8 @@ print('\nMeasures dataframe shape:', measures.shape)
 # keep last 10 years
 
 
-# export to .pkl file
-measures.to_pickle("measures.pkl")
+# export to .pkl file w/ zip compression added
+measures.to_pickle("measures.pkl.zip")
 
 
     
