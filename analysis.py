@@ -80,6 +80,9 @@ RD_data['Date']= RD_data['Date'].dt.date
 
 # APT_days_ratio = days in period(date current - date previous) / APT Ratio
 
+# take difference first
+# look up dateteime time delta object (days)
+
     # calculate number of days between periods
 #sample[‘t_val’] = sample.index
 #sample[‘delta’] = (sample[‘t_val’]-sample[‘t_val’].shift()).fillna(0)

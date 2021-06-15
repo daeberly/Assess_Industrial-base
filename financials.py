@@ -13,23 +13,143 @@ Created on Sun Jun 13 18:04:46 2021
 # Data Source: SEC Filings & Yahoo Finance Premier .csv reports
 # .csv reports downloaded on 6.13.2021
 
+
+# This code creates...
+
+    # 'DIB_Financials' dataframe (2021-1985) includes:
+        # fundamentals, cash flow, balance sheet & valuation measures
+        
+    # 'stock_info' dataframe (2021 ~ 1980s) includes:
+        # open, high, low, close, volume, dividend per stock, stock split
+
+
 import glob           # help: https://pynative.com/python-glob/
 import pandas as pd
 import os
-import numpy as np
 import time
 import datetime
 
 start = time.time()
-
-# Results:
-    # 'DIB_Financials' dataframe (2021-1985) includes:
-        # fundamentals, cash flow, balance sheet & valuation measures
-    # 'stock_info' dataframe (2021 ~ 1980s) includes:
-        # open, high, low, close, volume, dividend per stock, stock split
-
-# today's date for exporting files
 current = datetime.date.today()
+    
+#%%
+
+
+# Combined Financials Sheets (Years 2021-1985)
+
+
+#
+#  Blank dataframe to hold the accumulated data
+#
+
+stack_all = pd.DataFrame()
+
+#
+#  Read the files one by one and stack the data onto stack_all
+#
+path = "raw_data/*.csv"
+
+for file in glob.glob(path, recursive = False):
+
+    raw = pd.read_csv(file,dtype=str)
+    
+    #  remove spaces and use the name as the index
+    
+    raw['name'] = raw['name'].str.strip()
+    raw = raw.set_index('name')
+
+    #  stack all the remaining columns; the date will become a level 
+    #  in the index
+    
+    stk = raw.stack()
+    
+    #  set the names of the resulting index levels and the name of 
+    #  the remaining data values
+    
+    stk.index.names = ['name','date']
+    stk.name = 'value'
+    
+    #  remove commas and convert the data to floats
+    
+    stk = stk.str.replace(',','').astype(float)
+    
+    #  look for name,date duplicates
+    
+    dups = stk.index.duplicated()
+    print( f'Duplicates in {file}:', dups.sum() )
+    
+    # convert Series to Dataframe
+    stk = stk.to_frame()
+        
+    # add ticker to each row in data
+    ticker = os.path.splitext(os.path.basename(file))[0]
+    ticker = ticker.split('_')[0]     
+    stk ['ticker'] = ticker
+    
+    #  append the data to the main stack
+
+    stack_all = stack_all.append(stk)
+
+#%%
+#
+#  Show the result for checking
+#
+
+print( stack_all )
+
+#
+#  Add ticker to index prior in order to unstack
+#
+
+stack_all = stack_all.set_index(['ticker'], append=True)
+
+print( stack_all )
+
+#
+#  Turn the names into columns
+#
+
+uns = stack_all.unstack('name')['value']
+
+print( uns )
+
+#
+#  Get rid of TTM, convert dates, and sort
+#
+
+uns = uns.drop('ttm',axis=0)
+uns = uns.reset_index()
+uns['date'] = pd.to_datetime( uns['date'] )
+uns['date'] = uns['date'].dt.date    # keep only the date, remove hr/min/sec
+uns = uns.set_index(['date'])
+DIB_Financials = uns.sort_index( ascending= False)
+
+print ( DIB_Financials )
+
+
+
+#%%
+
+#
+# Trim dataframe to only financial measures of interest
+#
+
+
+# import .csv with measures of interest
+keep = pd.read_csv('measures_toKeep.csv')
+
+# create a new dataframe with only those measures
+keep = keep.Measures.to_list()
+measures = DIB_Financials[ keep ]
+
+# export to .pkl file w/ zip compression added
+measures.to_pickle("measures.pkl.zip")
+
+# save a sample
+sample = measures.sample(1000)
+sample.to_csv(str(current) + '_DIB_financials.csv')
+
+print('\n Financials exported to: measures.pkl.zip')
 
 #%%
 # 
@@ -65,100 +185,12 @@ stock_info = stock_info.set_index(['Date', 'ticker'])
 # export to .pkl
 stock_info.to_pickle('stock_info.pkl.zip')
 
+print('\n Stock prices exported to : stock_info.pkl.zip')
+
+
 # sample
 sample = stock_info.sample(1000)
 sample.to_csv(str(current) + '_sample_stock_info.csv')
-    
-#%%
-
-#
-# Combined Financials Sheets (Years 2021-1985)
-#
-
-
-DIB_Financials = pd.DataFrame()
-
-path = "raw_data/*.csv"
-
-for file in glob.glob(path, recursive = False):
-    print(file) # visual cue for files imported 
-    raw_data = pd.read_csv(file)
-        # flip columns & rows
-    raw_data = raw_data.transpose()
-    
-    # Clean table
-        # pull out date from index & reset columns names
-    raw_data = raw_data.reset_index()
-    header_row = 0
-    raw_data.columns = raw_data.iloc[header_row]
-        # delete row used for header
-    raw_data = raw_data.drop([0])
-        # fix date header
-    rename = {'name': 'Date'}
-    raw_data.rename(columns= rename, inplace= True)
-        # prep string values for data type conversion
-    sub_in = {',':''}     
-    raw_data = raw_data.replace(sub_in, regex=True)
-        # delete 'ttm' entries - trailing 12 months (ttm) will skew data
-    raw_data = raw_data[~raw_data.Date.str.contains('ttm')]
-        # convert string date to datetime
-    date_type = {'Date': 'datetime64'}
-    raw_data = raw_data.astype(date_type)
-        # convert all columns to floats
-    raw_data = raw_data.apply(pd.to_numeric)
-        # convert date from float to datetime format
-    date_type = {'Date': 'datetime64[ns]'}
-    raw_data = raw_data.astype(date_type)
-
-    # Add ticker symbol per row
-        # pull company ticker symbol from filename
-    ticker = os.path.splitext(os.path.basename(file))[0]
-    ticker = ticker[:3]       
-        # create a column with company ticker in each row
-    raw_data ['ticker'] = ticker
-                
-    # Add this dataframe to main dataframe
-    DIB_Financials = DIB_Financials.append(raw_data)
-
-# remove all tabs '\t' from column header names
-DIB_Financials.columns = DIB_Financials.columns.str.strip()
-
-# remove seconds from date column
-DIB_Financials['Date']= DIB_Financials['Date'].dt.date
-
-# set index
-DIB_Financials = DIB_Financials.set_index(['Date','ticker'])
-
-# check for duplicates
-check = DIB_Financials.index.duplicated()
-print('\nNumber of Duplicates:',check.sum())
-
-# export sample to .csv
-sample = DIB_Financials.sample(frac= 0.1)
-sample.to_csv(str(current) + '_sample_DIB_Financials.csv')
-
-#%%
-
-#
-# Trim dataframe to only financial measures of interest
-#
-
-#  extract smaller dataframe
-
-    # import .csv with measures o
-keep = pd.read_csv('measures_toKeep.csv')
-    # covert 'Measures' column to a list
-keep = keep.Measures.to_list()
-measures = DIB_Financials[ keep ]
-print('\nMeasures dataframe shape:', measures.shape)
-    
-# keep last 10 years
-
-
-# export to .pkl file w/ zip compression added
-measures.to_pickle("measures.pkl.zip")
-
-
     
 #%%
 
