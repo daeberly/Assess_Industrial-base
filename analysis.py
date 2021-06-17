@@ -20,9 +20,11 @@ companies = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX']
 
 #%%
 
-# import pickle file
+# import pickle files
 measures=pd.read_pickle("measures_qtrly.pkl.zip")
 stock_info=pd.read_pickle("stock_info.pkl.zip")
+monthly = pd.read_pickle("measures_monthly.pkl.zip")
+
 
 #%%
 
@@ -44,6 +46,11 @@ stocks_10yr = stock_info.query("Date > '2010-01-29 00:00:00' and Date < '2021-06
 stocks_5yr = stock_info.query("Date > '2016-01-29 00:00:00' and Date < '2021-06-11 00:00:00'")
 stocks_3yr = stock_info.query("Date > '2018-01-29 00:00:00' and Date < '2021-06-11 00:00:00'")
 stocks_1yr = stock_info.query("Date > '2020-01-29 00:00:00' and Date < '2021-06-11 00:00:00'")
+
+monthly_10yr = monthly.query("date > '2010-01-29 00:00:00' and date < '2021-06-11 00:00:00'")
+monthly_5yr = monthly.query("date > '2016-01-29 00:00:00' and date < '2021-06-11 00:00:00'")
+monthly_3yr = monthly.query("date > '2018-01-29 00:00:00' and date < '2021-06-11 00:00:00'")
+monthly_1yr = monthly.query("date > '2020-01-29 00:00:00' and date < '2021-06-11 00:00:00'")
 
 #%%
 
@@ -423,6 +430,11 @@ stock_info_1yr.to_pickle("stocks_1yr.pkl")
 stock_info_3yr.to_pickle("stocks_3yr.pkl")
 stock_info_5yr.to_pickle("stocks_5yr.pkl")
 stock_info_10yr.to_pickle("stocks_10yr.pkl")
+
+monthly_10yr.to_pickle("monthly_10yr.pkl")
+monthly_5yr.to_pickle("monthly_5yr.pkl")
+monthly_3yr.to_pickle("monthly_3yr.pkl")
+monthly_1yr.to_pickle("monthly_1yr.pkl")
 
 apt.to_pickle('apt.pkl')
 

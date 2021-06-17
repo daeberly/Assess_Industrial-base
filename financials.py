@@ -147,6 +147,7 @@ measures.to_pickle("measures_qtrly.pkl.zip")
 
 print('\n Financials exported to: measures_qrtly.pkl.zip')
 
+
 '''
 # sample
 sample = measures.sample(frac = 0.1)
@@ -265,6 +266,8 @@ measures = DIB_Financials[ keep ]
 measures.to_pickle("measures_monthly.pkl.zip")
 
 print('\n Financials exported to: measures_monthly.pkl.zip')
+
+print('\n... Processing stock data ...')
 
 '''
 # sample
