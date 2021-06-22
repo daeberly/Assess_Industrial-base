@@ -8,15 +8,6 @@ Created on Mon Jun 14 14:33:38 2021
 # DIB Financial Analysis
 #
 
-########
-# error
-
-# line 426
-
-# KeyError: '2011-03-31 00:00:00'
-
-#######
-
 # Date: 6.14.2021
 # Data Source: SEC Filings & Yahoo Finance Premier .csv reports
 # .csv reports downloaded on 6.13.2021
@@ -25,6 +16,7 @@ Created on Mon Jun 14 14:33:38 2021
 
 import pandas as pd
 import datetime
+from dateutil.relativedelta import relativedelta
 
 start_time = datetime.datetime.now()
 
@@ -53,23 +45,53 @@ measures["ROE"] = measures["NetIncome"]/measures["StockholdersEquity"]
 
 #%%
 #
-# isolate time frames
+# Isolate timeframes
 #
 
-financials_10yr = measures.query("date > '2010-01-29 00:00:00' and date < '2021-06-11 00:00:00'")
-financials_5yr = measures.query("date > '2016-01-29 00:00:00' and date < '2021-06-11 00:00:00'")
-financials_3yr = measures.query("date > '2018-01-29 00:00:00' and date < '2021-06-11 00:00:00'")
-financials_1yr = measures.query("date > '2020-01-29 00:00:00' and date < '2021-06-11 00:00:00'")
+#
+# Set parameters for plots
+#
 
-stocks_10yr = stock_info.query("Date > '2010-01-29 00:00:00' and Date < '2021-06-11 00:00:00'")
-stocks_5yr = stock_info.query("Date > '2016-01-29 00:00:00' and Date < '2021-06-11 00:00:00'")
-stocks_3yr = stock_info.query("Date > '2018-01-29 00:00:00' and Date < '2021-06-11 00:00:00'")
-stocks_1yr = stock_info.query("Date > '2020-01-29 00:00:00' and Date < '2021-06-11 00:00:00'")
+# Timeframes
 
-monthly_10yr = monthly.query("date > '2010-01-29 00:00:00' and date < '2021-06-11 00:00:00'")
-monthly_5yr = monthly.query("date > '2016-01-29 00:00:00' and date < '2021-06-11 00:00:00'")
-monthly_3yr = monthly.query("date > '2018-01-29 00:00:00' and date < '2021-06-11 00:00:00'")
-monthly_1yr = monthly.query("date > '2020-01-29 00:00:00' and date < '2021-06-11 00:00:00'")
+# Created with TODAY = 2021-6-14 00:00:00
+
+# End Date
+    # set to 6/14 so results don't change as we write the report
+today = pd.to_datetime('2021-06-14 00:00:00')
+#today = datetime.datetime.today()
+today = today.replace(hour=0, minute=0, second=0, microsecond=0) 
+
+# Start Date per timeframe
+one_year = datetime.datetime.today() + relativedelta(years=-1)
+one_year = one_year.replace(hour=0, minute=0, second=0, microsecond=0) 
+
+three_year = datetime.datetime.today() + relativedelta(years=-3)
+three_year = three_year.replace(hour=0, minute=0, second=0, microsecond=0) 
+
+five_year = datetime.datetime.today() + relativedelta(years=-5)
+five_year = five_year.replace(hour=0, minute=0, second=0, microsecond=0) 
+
+ten_year = datetime.datetime.today() + relativedelta(years=-10)
+ten_year = ten_year.replace(hour=0, minute=0, second=0, microsecond=0) 
+
+#
+# Create timeframes from files
+#
+financials_10yr = measures.query("date > @ten_year and date < @today ")
+financials_5yr = measures.query("date > @five_year and date < @today ")
+financials_3yr = measures.query("date > @three_year and date < @today ")
+financials_1yr = measures.query("date > @one_year and date < @today ")
+
+stocks_10yr = stock_info.query("Date > @ten_year and Date < @today " )
+stocks_5yr = stock_info.query( "Date > @five_year and Date < @today " )
+stocks_3yr = stock_info.query( "Date > @three_year and Date < @today "  )
+stocks_1yr = stock_info.query( "Date > @one_year and Date < @today " )
+
+monthly_10yr = monthly.query( "date > @ten_year and date < @today ")
+monthly_5yr = monthly.query( "date > @five_year and date < @today ")
+monthly_3yr = monthly.query( "date > @three_year and date < @today ")
+monthly_1yr = monthly.query( "date > @one_year and date < @today " )
 
 #%%
 
@@ -132,11 +154,9 @@ apt.to_pickle('clean_data/apt.pkl')
     
 #%%
 
-##
+################
 ## Stock & ROIs - Normalize Stock prices & calculate ROI 
-##
-
-companies = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX', 'SPX']
+################
 
 
 # collect ROIs for all timeframes
@@ -146,6 +166,8 @@ all_ROIs = pd.DataFrame( companies, columns= ['ticker'] )
 #
 #  Stock & ROI Calcs - 10 YR 
 #
+
+companies = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX', 'SPX']
 
 #print('If you purchased 1 stock in 2/2011 & sold it in 6/2021.')
 
@@ -209,6 +231,8 @@ all_ROIs['roi_%diff_10yr'] = all_ROIs['ticker'].map( dic_roi_diff )
 #  Stock & ROI Calcs - 5 YR 
 #
 
+companies = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX', 'SPX']
+
 #print('If you purchased 1 stock in 2/2016 & sold it in 6/2021.')
 
 # Normalize stock price plus ROI
@@ -269,7 +293,10 @@ all_ROIs['roi_%diff_5yr'] = all_ROIs['ticker'].map( dic_roi_diff )
 #  Stock & ROI Calcs - 3 YR 
 #
 
-#print('If you purchased 1 stock in 2/2018 & sold it in 6/2021.')
+# 'SPX' removed because data stops at 2018. No 2019 or 2020 data.
+companies = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX']
+
+#print('If you purchased 1 stock in 2/2016 & sold it in 6/2021.')
 
 # Normalize stock price plus ROI
 stock_info_3yr = pd.DataFrame()
@@ -322,12 +349,17 @@ all_ROIs['roi_3yr'] = all_ROIs['ticker'].map( dic_roi )
 all_ROIs['roi_div_3yr'] = all_ROIs['ticker'].map( dic_roi_div )
 all_ROIs['roi_%diff_3yr'] = all_ROIs['ticker'].map( dic_roi_diff )
 
+
 #%%
+
 
 ####
 #
 #  Stock & ROI Calcs - 1 YR 
 #
+
+# 'SPX' removed because data stops at 2018. No 2019 or 2020 data.
+companies = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX']
 
 #print('If you purchased 1 stock in 2/2020 & sold it in 6/2021.')
 
@@ -403,6 +435,7 @@ stock_info_10yr.to_pickle("clean_data/stocks_10yr.pkl")
 # ROA & ROE
 #
 
+companies = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX']
 
 #
 # 10 yr
@@ -410,6 +443,7 @@ stock_info_10yr.to_pickle("clean_data/stocks_10yr.pkl")
 
 norm = financials_10yr[['ROA','ROE']]
 
+financials_10yr.dtypes
 # Keep only records with data
 norm = norm.dropna()
 
@@ -421,9 +455,10 @@ for ticker in companies:
     tick = ticker
     temp = norm.query("ticker == @tick")
     temp = temp.copy()  # .copy() needed fix Pandas Error when calculating
-    
+    temp = temp.sort_index( ascending= False )
+
     # normalize 
-    temp1 = temp.xs('2011-03-31 00:00:00')
+    temp1 = temp.iloc[-1]
     temp['norm_ROA'] = temp['ROA']/temp1['ROA']
     temp['norm_ROE'] = temp['ROE']/temp1['ROE']
     
@@ -437,6 +472,7 @@ for ticker in companies:
 #
 # 5 yr
 #
+companies = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX']
 
 norm = financials_5yr[['ROA','ROE']]
 
@@ -451,9 +487,10 @@ for ticker in companies:
     tick = ticker
     temp = norm.query("ticker == @tick")
     temp = temp.copy()  # .copy() needed fix Pandas Error when calculating
-    
+    temp = temp.sort_index( ascending= False )
+
     # normalize 
-    temp1 = temp.xs('2016-03-31 00:00:00')
+    temp1 = temp.iloc[-1]
     temp['norm_ROA'] = temp['ROA']/temp1['ROA']
     temp['norm_ROE'] = temp['ROE']/temp1['ROE']
     
@@ -466,6 +503,7 @@ for ticker in companies:
 #
 # 3 yr
 #
+companies = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX']
 
 norm = financials_3yr[['ROA','ROE']]
 
@@ -479,10 +517,11 @@ for ticker in companies:
   
     tick = ticker
     temp = norm.query("ticker == @tick")
-    temp = temp.copy()  # .copy() needed fix Pandas Error when calculating
-    
+    temp = temp.copy()  # .copy() needed fix Pandas Error when calculating   
+    temp = temp.sort_index( ascending= False )
+
     # normalize 
-    temp1 = temp.xs('2018-03-31 00:00:00')
+    temp1 = temp.iloc[-1]
     temp['norm_ROA'] = temp['ROA']/temp1['ROA']
     temp['norm_ROE'] = temp['ROE']/temp1['ROE']
     
@@ -494,6 +533,7 @@ for ticker in companies:
 #
 # 1 yr
 #
+companies = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX']
 
 norm = financials_1yr[['ROA','ROE']]
 
@@ -508,9 +548,10 @@ for ticker in companies:
     tick = ticker
     temp = norm.query("ticker == @tick")
     temp = temp.copy()
-    
+    temp = temp.sort_index( ascending= False )
+
     # normalize 
-    temp1 = temp.xs('2020-03-31 00:00:00')
+    temp1 = temp.iloc[-1]
     temp['norm_ROA'] = temp['ROA']/temp1['ROA']
     temp['norm_ROE'] = temp['ROE']/temp1['ROE']
     

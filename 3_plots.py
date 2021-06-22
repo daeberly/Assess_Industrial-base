@@ -8,8 +8,9 @@
 # This code creates the following plots for 10,5,3, & 1-year timeframes:
     # Stock prices for all companies
     # ROA and ROE for all companies
-    # ROA and ROE for all companies, excluding GE
+    # ROA and ROE for all companies, exclude GE
     # All companies Dividends and Stock Repurchase (separate graphs)
+    # All companies Dividends and Stock Repurchase (separate graphs), exclude GE
     # Market Cap against P/E Ratio - company specific
     # Market Cap - All companies
     # P/E Ratios, excluding GE
@@ -19,7 +20,7 @@
     # Accounts Payable Turnover in Days, per company
     # Shareholder ROI - barchart
     # Rearch & Development Investments, by company & year
-    # Plot Grid of 6 figures - R&D Investments, by company excludes GE
+    # Plot Grid of 6 figures - R&D Investments, by company exclude GE
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -70,8 +71,6 @@ roi = pd.read_pickle("clean_data/ROI_table.pkl")
 # Automatically query timeframes from data
 #
 
-##### TBD...still needs work
-
 #
 # Set parameters for plots
 #
@@ -100,10 +99,10 @@ ten_year = ten_year.replace(hour=0, minute=0, second=0, microsecond=0)
 #
 
 print(apt.dtypes)
-apt_10yr = apt.query("date > '2011-01-29 00:00:00' and date < '2021-06-11 00:00:00'")
-apt_5yr = apt.query("date > '2016-01-29 00:00:00' and date < '2021-06-11 00:00:00'")
-apt_3yr = apt.query("date > '2018-01-29 00:00:00' and date < '2021-06-11 00:00:00'")
-apt_1yr = apt.query("date > '2020-01-29 00:00:00' and date < '2021-06-11 00:00:00'")
+apt_10yr = apt.query("date > @ten_year and date < @today ")
+apt_5yr = apt.query("date > @five_year and date < @today ")
+apt_3yr = apt.query("date > @three_year and date < @today ")
+apt_1yr = apt.query("date > @one_year and date < @today ")
 
 #%%
 # Company stock tickers used in plots below:
@@ -126,10 +125,19 @@ colors = { 'LMT' : 'lightgreen',
           'LHX' : 'plum'
           }
 
+stock_colors = { 'LMT' : 'lightgreen',
+                'GE' : 'lightcoral',
+                'RTX' : 'darkseagreen',
+                'GD' : 'peru',
+                'HII' : 'royalblue',
+                'BA' : 'lightsteelblue',
+                'LHX' : 'plum',
+                'SPX' : 'grey'
+                }
 #%%
 
 ##########################################
-# Stock prices for all companies & S&P 500
+# Normalized Stock prices for all companies & S&P 500
 ##########################################
 
 timeframes = {'Last 12 months':stock_info_1yr, '3 years':stock_info_3yr, 
@@ -145,15 +153,14 @@ for name,fin in timeframes.items():
     ax1.grid(b = True, color ='black',linestyle ='-.', linewidth = 0.5, alpha = 0.1)
     
     fig = sns.lineplot(data=fin, x='Date', y='norm_close', 
-                       hue='ticker', palette= colors)
+                       hue='ticker', palette= stock_colors)
     plt.xlabel(' ')
     plt.xticks(rotation=0)
     plt.ylabel('Normalized Stock Price',fontsize=12)
     ax1.legend( ncol=8, loc='upper center', fontsize=8)
     plt.title(f'Stock Price, {name}', fontsize=12)
     plt.tight_layout()
-    plt.savefig(f'plots/stocks/{name}_stock_prices.png', dpi=300)
- 
+    plt.savefig(f'plots/stocks/{name}_NormStock_prices.png', dpi=300)
 
 
 #%%
@@ -170,9 +177,14 @@ for name,fin in timeframes.items():
     transpose = fin.transpose()
     sns.set_theme(style="white", context='paper')
 
+# Calculate averages for reference line
+    ave = fin.groupby( ['date'] ).mean()
+    ave = ave.rename(columns= {'ROE':'ave_ROE',
+                                       'ROA':'ave_ROA',
+                                       'norm_ROE':'ave_norm_ROE',
+                                       'norm_ROA': 'ave_norm_ROA'})
 # ROE 
-    ci95 = pd.melt( frame= transpose, var_name= 'date', value_name= 'norm_ROE')
-
+        
     fig, ax1 = plt.subplots(figsize=(7,4))
     ax1.spines['top'].set_visible(False)
     ax1.spines['right'].set_visible(False)
@@ -180,13 +192,12 @@ for name,fin in timeframes.items():
     
     fig = sns.lineplot(data=fin, x='date', y='norm_ROE', 
                        hue='ticker', palette= colors)
-
+    
 #   Average & 95% confidence interval
-#    fig = sns.lineplot(ax= ax1, data= ci95, x= 'date', y= 'norm_ROE', 
-#                       alpha=.3, linestyle= '--', color= 'k')
+    fig = sns.lineplot(ax= ax1, data= ave, x= 'date', y= 'ave_norm_ROE', 
+                       alpha=.9, linestyle= '--', color= 'r', ci=None)
     plt.xlabel(' ')
     plt.xticks(rotation=0)
-#    plt.axhline(14, linewidth=1, color='r', linestyle= '-.', alpha=0.5)
     plt.ylabel('Normalized Ratio',fontsize=12)
     ax1.legend( ncol=7, loc='upper center', fontsize=9)
     plt.title(f'Return on Equity with General Electric, {name}', fontsize=12)
@@ -194,7 +205,6 @@ for name,fin in timeframes.items():
     plt.savefig(f'plots/ROE/{name}_ROE_GE.png', dpi=300)
  
 # ROA
-    ci95 = pd.melt( frame= transpose, var_name= 'date', value_name= 'norm_ROA')
 
     fig, ax1 = plt.subplots(figsize=(7,4))
     ax1.spines['top'].set_visible(False)
@@ -205,11 +215,10 @@ for name,fin in timeframes.items():
                        hue='ticker', palette= colors)
 
 #   Average & 95% confidence interval
-#    fig = sns.lineplot(ax= ax1, data= ci95, x= 'date', y= 'norm_ROA', 
-#                       alpha=.3, linestyle= '--', color= 'k')
+    fig = sns.lineplot(ax= ax1, data= ave, x= 'date', y= 'ave_norm_ROA', 
+                       alpha=.9, linestyle= '--', color= 'r', ci=None)
     plt.xlabel(' ')
     plt.xticks(rotation=0)
-#    plt.axhline(5, linewidth=1, color='r', linestyle= '-.', alpha=0.5)    
     plt.ylabel('Normalized Ratio',fontsize=12)
     ax1.legend( ncol=7, loc='upper center', fontsize=9)
     plt.title(f'Return on Assets with General Electric, {name}', fontsize=12)
@@ -227,16 +236,21 @@ timeframes = {'1yr':norm_fin_1yr, '3yr':norm_fin_3yr,
               '5yr':norm_fin_5yr, '10yr':norm_fin_10yr}
 
 for name,fin in timeframes.items():
-    
+
+# Exclude GE    
     fin = fin.query("ticker != @exclude ")
     
-    transpose = fin.transpose()
+# Calculate averages for reference line
+    ave = fin.groupby( ['date'] ).mean()
+    ave = ave.rename(columns= {'ROE':'ave_ROE',
+                                       'ROA':'ave_ROA',
+                                       'norm_ROE':'ave_norm_ROE',
+                                       'norm_ROA': 'ave_norm_ROA'})
+    
     fin = fin.reset_index()
     sns.set_theme(style="white", context='paper')
 
 # ROE 
-    ci95 = pd.melt( frame= transpose, var_name= 'date', value_name= 'norm_ROE')
-
     fig, ax1 = plt.subplots(figsize=(7,4))
     ax1.spines['top'].set_visible(False)
     ax1.spines['right'].set_visible(False)
@@ -244,13 +258,12 @@ for name,fin in timeframes.items():
     
     fig = sns.lineplot(data=fin, x='date', y='norm_ROE',
                        hue='ticker', palette= colors)
-
 #   Average & 95% confidence interval
-#    fig = sns.lineplot(ax= ax1, data= ci95, x= 'date', y= 'norm_ROE', 
-#                       alpha=.3, linestyle= '--', color= 'k')
+    fig = sns.lineplot(ax= ax1, data= ave, x= 'date', y= 'ave_norm_ROE', 
+                       alpha=.9, linestyle= '--', color= 'r', ci=None)
+    
     plt.xlabel(' ')
     plt.xticks(rotation=0)
-    plt.axhline(14, linewidth=1, color='r', linestyle= '-.', alpha=0.5)
     plt.ylabel('Normalized Ratio',fontsize=12)
     ax1.legend( ncol=6, loc='upper center', fontsize=10)
     plt.title(f'Return on Equity, {name}', fontsize=12)
@@ -267,13 +280,11 @@ for name,fin in timeframes.items():
     
     fig = sns.lineplot(data=fin, x='date', y='norm_ROA', 
                        hue='ticker', palette= colors)
-
 #   Average & 95% confidence interval
-#    fig = sns.lineplot(ax= ax1, data= ci95, x= 'date', y= 'norm_ROA', 
-#                       alpha=.3, linestyle= '--', color= 'k')
+    fig = sns.lineplot(ax= ax1, data= ave, x= 'date', y= 'ave_norm_ROA', 
+                       alpha=.9, linestyle= '--', color= 'r', ci=None)
     plt.xlabel(' ')
     plt.xticks(rotation=0)
-    plt.axhline(5, linewidth=1, color='r', linestyle= '-.', alpha=0.5)    
     plt.ylabel('Normalized Ratio',fontsize=12)
     ax1.legend( ncol=6, loc='upper center', fontsize=10)
     plt.title(f'Return on Assets, {name}', fontsize=12)
@@ -307,7 +318,7 @@ for name,temp in timeframes.items():
     plt.xlabel(' ')
     plt.ylabel('Cash Flow (millions)')
     plt.title('Cash Dividends Paid')
-    plt.savefig('plots/CashFlow/{name}_CashFlowDiv_All.png', dpi=300)
+    plt.savefig(f'plots/CashFlow/{name}_CashFlowDiv_All_GE.png', dpi=300)
 
 # Stock Repurchases
     fig, ax1 = plt.subplots(figsize=(7,4))
@@ -321,7 +332,53 @@ for name,temp in timeframes.items():
     plt.xlabel(' ')
     plt.ylabel('Cash Flow (millions)')
     plt.title('Repurchase of Capital Stock')
-    plt.savefig('plots/CashFlow/{name}_CashFlowRepurchase_All.png', dpi=300)
+    plt.savefig(f'plots/CashFlow/{name}_CashFlowRepurchase_All_GE.png', dpi=300)
+
+
+#%%
+
+############################################################################
+# All companies Dividends and Stock Repurchase (separate graphs), exclude GE
+############################################################################
+
+timeframes = {'1yr':financials_1yr, '3yr':financials_3yr, 
+              '5yr':financials_5yr, '10yr':financials_10yr}
+
+for name,temp in timeframes.items():
+
+    # exclude GE
+    temp = temp.query("ticker != @exclude ")
+    
+    # covert values to $Millions
+    temp = temp*-1/1e6
+
+# Cash Dividends Paid    
+    fig, ax1 = plt.subplots(figsize=(7,4))
+    ax1.spines['top'].set_visible(False)
+    ax1.spines['right'].set_visible(False)
+    ax1.grid(b = True, color ='black',linestyle ='-.', linewidth = 0.5, alpha = 0.1)
+ 
+    fig = sns.lineplot(data=temp, x='date', y='CashDividendsPaid',
+                       hue='ticker', palette= colors)
+    ax1.legend( ncol=7, loc='upper center', fontsize=8)
+    plt.xlabel(' ')
+    plt.ylabel('Cash Flow (millions)')
+    plt.title('Cash Dividends Paid')
+    plt.savefig(f'plots/CashFlow/{name}_CashFlowDiv_All.png', dpi=300)
+
+# Stock Repurchases
+    fig, ax1 = plt.subplots(figsize=(7,4))
+    ax1.spines['top'].set_visible(False)
+    ax1.spines['right'].set_visible(False)
+    ax1.grid(b = True, color ='black',linestyle ='-.', linewidth = 0.5, alpha = 0.1)
+
+    fig = sns.lineplot(data=temp, x='date', y='RepurchaseOfCapitalStock'
+                       , hue='ticker', palette= colors)
+    ax1.legend( ncol=7, loc='upper center', fontsize=8)
+    plt.xlabel(' ')
+    plt.ylabel('Cash Flow (millions)')
+    plt.title('Repurchase of Capital Stock')
+    plt.savefig(f'plots/CashFlow/{name}_CashFlowRepurchase_All.png', dpi=300)
 
 
 #%%

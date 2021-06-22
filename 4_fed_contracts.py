@@ -168,7 +168,7 @@ combined_csv.to_pickle('clean_data/FY20_contracts.pkl.zip')
 
 print('\nclean_data/contracts.pkl.zip exported.\nReady to code...')
 
-print( '\nPart 4 Complete = Great Success!)
+print( '\nPart 4 Complete = Great Success!')
 
 end_time = datetime.datetime.now()
 time_diff = (end_time - start_time)

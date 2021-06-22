@@ -290,14 +290,14 @@ measures.to_csv(str(current) + '_sample_measures_monthly.csv')
 #pip install yfinance
 import yfinance as yf
 
-stocks = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX','SPX', 'SPSIAD']
+stocks = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX','SPX']
     # SPX = S&P 500 index.  
     # SPIAD = S&P 500 Aerospace & Defense Index
 
 stock_info = pd.DataFrame()
 
 for ticker in stocks:
-    tick  = yf.Ticker(ticker)
+    tick  = yf.Ticker( ticker )
     stock_hist = tick.history(period="max")
     stock_hist['ticker'] = ticker
     stock_info = stock_info.append( stock_hist )
@@ -310,6 +310,8 @@ stock_info = stock_info.set_index(['Date', 'ticker'])
 stock_info = stock_info.sort_values(by='Date', ascending= False)
 
 print('\n10 row sampling', stock_info.sample(10))
+
+spx = stock_info.query(" ticker == 'SPX' ")
 
 # export to .pkl
 stock_info.to_pickle('clean_data/stock_info.pkl.zip')
