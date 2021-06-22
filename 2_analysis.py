@@ -48,10 +48,6 @@ measures["ROE"] = measures["NetIncome"]/measures["StockholdersEquity"]
 # Isolate timeframes
 #
 
-#
-# Set parameters for plots
-#
-
 # Timeframes
 
 # Created with TODAY = 2021-6-14 00:00:00
@@ -59,6 +55,8 @@ measures["ROE"] = measures["NetIncome"]/measures["StockholdersEquity"]
 # End Date
     # set to 6/14 so results don't change as we write the report
 today = pd.to_datetime('2021-06-14 00:00:00')
+
+    # future analysis use the next line...
 #today = datetime.datetime.today()
 today = today.replace(hour=0, minute=0, second=0, microsecond=0) 
 
@@ -78,10 +76,10 @@ ten_year = ten_year.replace(hour=0, minute=0, second=0, microsecond=0)
 #
 # Create timeframes from files
 #
-financials_10yr = measures.query("date > @ten_year and date < @today ")
-financials_5yr = measures.query("date > @five_year and date < @today ")
-financials_3yr = measures.query("date > @three_year and date < @today ")
-financials_1yr = measures.query("date > @one_year and date < @today ")
+financials_10yr = measures.query("date > '2011-01-31 00:00:00' and date < @today ")
+financials_5yr = measures.query("date > '2016-01-31 00:00:00' and date < @today ")
+financials_3yr = measures.query("date > '2018-01-31 00:00:00' and date < @today ")
+financials_1yr = measures.query("date > '2020-01-31 00:00:00' and date < @today ")
 
 stocks_10yr = stock_info.query("Date > @ten_year and Date < @today " )
 stocks_5yr = stock_info.query( "Date > @five_year and Date < @today " )
@@ -455,10 +453,9 @@ for ticker in companies:
     tick = ticker
     temp = norm.query("ticker == @tick")
     temp = temp.copy()  # .copy() needed fix Pandas Error when calculating
-    temp = temp.sort_index( ascending= False )
 
     # normalize 
-    temp1 = temp.iloc[-1]
+    temp1 = temp.xs('2011-03-31 00:00:00')
     temp['norm_ROA'] = temp['ROA']/temp1['ROA']
     temp['norm_ROE'] = temp['ROE']/temp1['ROE']
     
@@ -487,10 +484,9 @@ for ticker in companies:
     tick = ticker
     temp = norm.query("ticker == @tick")
     temp = temp.copy()  # .copy() needed fix Pandas Error when calculating
-    temp = temp.sort_index( ascending= False )
 
     # normalize 
-    temp1 = temp.iloc[-1]
+    temp1 = temp.xs('2016-03-31 00:00:00')
     temp['norm_ROA'] = temp['ROA']/temp1['ROA']
     temp['norm_ROE'] = temp['ROE']/temp1['ROE']
     
@@ -518,10 +514,9 @@ for ticker in companies:
     tick = ticker
     temp = norm.query("ticker == @tick")
     temp = temp.copy()  # .copy() needed fix Pandas Error when calculating   
-    temp = temp.sort_index( ascending= False )
 
     # normalize 
-    temp1 = temp.iloc[-1]
+    temp1 = temp.xs('2018-03-31 00:00:00')
     temp['norm_ROA'] = temp['ROA']/temp1['ROA']
     temp['norm_ROE'] = temp['ROE']/temp1['ROE']
     
@@ -551,7 +546,7 @@ for ticker in companies:
     temp = temp.sort_index( ascending= False )
 
     # normalize 
-    temp1 = temp.iloc[-1]
+    temp1 = temp.xs('2020-03-31 00:00:00')
     temp['norm_ROA'] = temp['ROA']/temp1['ROA']
     temp['norm_ROE'] = temp['ROE']/temp1['ROE']
     
