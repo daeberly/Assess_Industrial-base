@@ -11,12 +11,11 @@ Created on Mon Jun 14 14:33:38 2021
 ########
 # error
 
-# line 349    start_date = temp.iloc[-1]
+# line 426
 
-# IndexError: single positional indexer is out-of-bounds
+# KeyError: '2011-03-31 00:00:00'
 
-
-
+#######
 
 # Date: 6.14.2021
 # Data Source: SEC Filings & Yahoo Finance Premier .csv reports
@@ -204,6 +203,7 @@ all_ROIs['roi_div_10yr'] = all_ROIs['ticker'].map( dic_roi_div )
 all_ROIs['roi_%diff_10yr'] = all_ROIs['ticker'].map( dic_roi_diff )
 
 #%%
+
 ####
 #
 #  Stock & ROI Calcs - 5 YR 
@@ -263,6 +263,7 @@ all_ROIs['roi_div_5yr'] = all_ROIs['ticker'].map( dic_roi_div )
 all_ROIs['roi_%diff_5yr'] = all_ROIs['ticker'].map( dic_roi_diff )
 
 #%%
+
 ####
 #
 #  Stock & ROI Calcs - 3 YR 
@@ -322,7 +323,8 @@ all_ROIs['roi_div_3yr'] = all_ROIs['ticker'].map( dic_roi_div )
 all_ROIs['roi_%diff_3yr'] = all_ROIs['ticker'].map( dic_roi_diff )
 
 #%%
-#####
+
+####
 #
 #  Stock & ROI Calcs - 1 YR 
 #
@@ -340,7 +342,7 @@ roi_diff = []
 for ticker in companies:
   
     tick = ticker
-    temp = stocks_1yr.query("ticker == @tick")
+    temp = stocks_3yr.query("ticker == @tick")
     temp = temp.copy()  # .copy() needed fix Pandas Error when calculating
     
     # sort data  
@@ -517,31 +519,58 @@ for ticker in companies:
 #print ( norm_fin_1yr )
 
 #%%
-#Pickle dfs for plotting in another file
 
+#
+# Pickle dfs for plotting in another file
+#
+
+# Normalized Financials
 norm_fin_1yr.to_pickle("clean_data/norm_fin_1yr.pkl")
 norm_fin_3yr.to_pickle("clean_data/norm_fin_3yr.pkl")
 norm_fin_5yr.to_pickle("clean_data/norm_fin_5yr.pkl")
 norm_fin_10yr.to_pickle("clean_data/norm_fin_10yr.pkl")
 
+sample = norm_fin_10yr.sample(frac=0.2)
+sample.to_csv("clean_data/sample_norm_fin_10yr.csv")
+
+# Financials
 financials_1yr.to_pickle("clean_data/financials_1yr.pkl")
 financials_3yr.to_pickle("clean_data/financials_3yr.pkl")
 financials_5yr.to_pickle("clean_data/financials_5yr.pkl")
 financials_10yr.to_pickle("clean_data/financials_10yr.pkl")
 
+sample = financials_10yr.sample(frac=0.2)
+sample.to_csv("clean_data/sample_financials_10yr.csv")
+
+# Stock Info
 stock_info_1yr.to_pickle("clean_data/stocks_1yr.pkl")
 stock_info_3yr.to_pickle("clean_data/stocks_3yr.pkl")
 stock_info_5yr.to_pickle("clean_data/stocks_5yr.pkl")
 stock_info_10yr.to_pickle("clean_data/stocks_10yr.pkl")
 
+sample = stock_info_10yr.sample(frac=0.2)
+sample.to_csv("clean_data/sample_stock_info_10yr.csv")
+
+# Monthly financials
 monthly_10yr.to_pickle("clean_data/monthly_10yr.pkl")
 monthly_5yr.to_pickle("clean_data/monthly_5yr.pkl")
 monthly_3yr.to_pickle("clean_data/monthly_3yr.pkl")
 monthly_1yr.to_pickle("clean_data/monthly_1yr.pkl")
 
+sample = monthly_10yr.sample(frac=0.2)
+sample.to_csv("clean_data/sample_monthly_10yr.csv")
+
+# Accounts Payable Turnover
 apt.to_pickle('clean_data/apt.pkl')
 
+sample = apt.sample(frac=0.2)
+sample.to_csv("clean_data/sample_apt.csv")
+
+# Shareholder ROI calc
 all_ROIs.to_pickle('clean_data/ROI_table.pkl')
+
+sample = all_ROIs.sample(frac=0.2)
+sample.to_csv("clean_data/sample_ROI_table.csv")
 
 #%%
 

@@ -11,7 +11,8 @@ Created on Wed Jun 16 17:48:06 2021
 
 # Sources: 
     # USA Spending.gov 
-        # https://www.usaspending.gov/download_center/custom_award_data
+        # https://www.usaspending.gov/download_center/custom_award_data        
+        # https://www.usaspending.gov/download_center/dataset_metadata
     # Congressional, State & Zipcode shapefiles
         # https://www.census.gov/cgi-bin/geo/shapefiles/index.php
 
@@ -36,44 +37,11 @@ import geopandas                  # for state/congressional district totals
 
 
 #%%
-
-#
-# Import Json Metafile with metadata
-# https://www.usaspending.gov/download_center/dataset_metadata
-#
-
-import json
-
-folder = '//tplinkwifi.net/G/Workshop - GAO/'
-
-fy21_data = 'FY21_contract_data/'
-
-file = 'USAspending-data-catalog.json'
-
-df = pd.read_json (folder + fy21_data + file)
-df.to_csv ('clean_data/metadata_contracts.txt', index = False)
-
-#import data
-with open( folder + fy21_data + file, "r") as rf:
-    decoded_data = json.load(rf)
-  
-print(decoded_data)
-
-# Check is the json object was loaded correctly
-try:    
-    print(decoded_data["name"])
-except KeyError:
-    print("Oops! JSON Data not loaded correctly")
-rf.close()
-# Write to .txt
-with open('USAspending_metadata.txt', 'w') as outfile:
-    json.dump(file, outfile)
-#%%
 #
 # Import .pkl.zip data
 #
 
-# .pkl.zip opions: 'FY21_contracts.pkl.zip' or 'FY20_contracts.pkl.zip'
+# .pkl.zip options: 'FY21_contracts.pkl.zip' or 'FY20_contracts.pkl.zip'
 
 sample = pd.read_pickle('clean_data/FY21_contracts.pkl.zip')
 print (sample.dtypes)
@@ -88,7 +56,7 @@ dup_rec = sample[ dups ]
 #%%
 
 #
-# Aggregate & Describe data
+# Clean entry names
 #
 
 names = {'ORDER DEPENDENT (IDV ALLOWS PRICING ARRANGEMENT TO BE DETERMINED SEPARATELY FOR EACH ORDER)' : 'ORDER DEPENDENT',
@@ -97,10 +65,37 @@ names = {'ORDER DEPENDENT (IDV ALLOWS PRICING ARRANGEMENT TO BE DETERMINED SEPAR
 
 sample = sample.replace( names )
 
-# keep on current FY start date
+#
+# Select contracts based on start date
+#       Data includes multi-year contracts starting back to 1993
+#
+
+# keep FY start date
 start_date = '2020-10-01'
 
 df_start = sample.query(' period_of_performance_start_date >= @start_date')
+
+#
+# Get unique names of companies
+#    ***Manually review list to find different spellings of company names
+#
+
+comp = df_start['recipient_parent_name'].sort_values()
+dups = comp.duplicated()
+print( '\nExtracting list of unique contractor parent names.' )
+print( '\nduplicate Parent Name records:', dups.sum() )
+comp = comp.drop_duplicates( keep='last')
+dups = comp.duplicated()
+print( '\nduplicate records remaining:', dups.sum() )
+print( '\nList of contracts exported to companies.csv')
+
+comp.to_csv('inputs/full_list_unique_company_names.csv', index=False)
+
+
+#%%
+#
+# Aggregate & Describe data
+#
 
 # 'awarding_agency_name' i.e. DoD
 agg_func = {'potential_total_value_of_award': ['sum'],
@@ -138,7 +133,10 @@ top_10_obligated.plot.barh()
 
 
 #%%
+
+#
 # Contract Types - Entire Fed Government
+#
 
 #
 # Contract Type vs. Pricing - Counts
@@ -211,22 +209,15 @@ plt.savefig('plots/contracts/FY21_contract_types_heatmap_DoD.png', dpi=300)
 
 
 #%%
-# Get unique names of companies
-    # Manually review list to find different spellings of company names
 
-comp = df_start['recipient_parent_name'].sort_values()
-dups = comp.duplicated()
-print( '\nExtracting list of unique contractor parent names.' )
-print( '\nduplicate Parent Name records:', dups.sum() )
-comp = comp.drop_duplicates( keep='last')
-dups = comp.duplicated()
-print( '\nduplicate records remaining:', dups.sum() )
-print( '\nList of contracts exported to companies.csv')
+#
+# Stats on select Defense Industrial Base Companies
+#
 
-comp.to_csv('companies.csv', index=False)
+#
+# Create dataframe with select companies from *manually* cleaned list 
+#
 
-
-# Select rows with select companies
 comps = pd.read_csv('inputs/DIB_companies.csv')
 comps_data = df_start.merge(comps, 
                              how="outer", 
@@ -249,6 +240,10 @@ names = DIB_data['std_name'].drop_duplicates( keep='first').to_list()
 
 for company in names:
     
+    #
+    # Contract Type vs. Award Type - counts per type
+    #
+    
     temp = DIB_data.query( " std_name == @company " )
     types_grouped = temp.groupby( ['type_of_contract_pricing' ,'award_type'])['federal_action_obligation'].count()
     types_grouped = types_grouped.to_frame()
@@ -267,7 +262,8 @@ for company in names:
     plt.savefig(f'plots/contracts/FY21_pricingType_Vs_awardType_heatmap_{company}.png', dpi=300)
 
     #
-    # Contract Type vs. Pricing - $ totals
+    # Contract Type vs. Award Type - $ obligations per type
+    #
     
     types_grouped = temp.groupby( ['type_of_contract_pricing' ,'award_type'])['total_dollars_obligated'].sum() / 1e6
     types_grouped = types_grouped.to_frame()
@@ -291,7 +287,7 @@ for company in names:
 # Housekeeping
 #
 
-print( '\nPart 4 Complete = Great Success!)
+print( '\nPart 5 Complete = Great Success!)
 
 end_time = datetime.datetime.now()
 

@@ -5,6 +5,14 @@ Created on Tue Jun 22 08:27:43 2021
 @author: eberly
 """
 
+#######
+#     ***** THIS CODE IS A ROUGH OUTLINE... NOT USED IN GAO PROJECT  *****
+#######
+
+
+
+
+
 #
 # Contract info
 #
@@ -22,7 +30,8 @@ Created on Tue Jun 22 08:27:43 2021
 
 import pandas as pd
 import datetime
-start = time.time()
+
+start_time = datetime.datetime.now()
 
 from scipy.stats import skew, mode
 import matplotlib.pyplot as plt
@@ -140,8 +149,11 @@ world.plot(column='potential_total_value_of_award',
 # Housekeeping
 #
 
+print( '\nPart 6 Complete = Great Success!)
+
 end_time = datetime.datetime.now()
 
 time_diff = (end_time - start_time)
 
 print('\nTotal Processing Time:', time_diff, 'hr:min:secs\n')
+
