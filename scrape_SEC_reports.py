@@ -27,13 +27,13 @@ import nltk    # nltk is natural language tool kit
 # https://www.sec.gov/edgar/searchedgar/companysearch.html
 company = 'RAYTHEON TECHNOLOGIES CORP' # company name is case sensitive - look it up on SEC website
 
-words_to_find = 'research and development'
+words_to_find = 'raw materials'
     # Examples: COVID-19, supply chain, risks, raw materials, workforce, China,
     # primary customer, contracts with the U.S. government
 
-filing = '10-Q'    # options: '10-K', '10-Q', etc...
-year = 2020         
-quarter = 'QTR2'
+filing = '10-K'    # options: '10-K', '10-Q', etc...
+year = 2021         
+quarter = 'QTR1'
 
 
 #

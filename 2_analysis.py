@@ -8,12 +8,26 @@ Created on Mon Jun 14 14:33:38 2021
 # DIB Financial Analysis
 #
 
+########
+# error
+
+# line 349    start_date = temp.iloc[-1]
+
+# IndexError: single positional indexer is out-of-bounds
+
+
+
+
 # Date: 6.14.2021
 # Data Source: SEC Filings & Yahoo Finance Premier .csv reports
 # .csv reports downloaded on 6.13.2021
 
+# Run this file after '1_inputs.py' & before '3_plots.py'
+
 import pandas as pd
-import numpy as np
+import datetime
+
+start_time = datetime.datetime.now()
 
 # Companies of interest
 companies = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX']
@@ -21,10 +35,16 @@ companies = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX']
 #%%
 
 # import pickle files
-measures=pd.read_pickle("measures_qtrly.pkl.zip")
-stock_info=pd.read_pickle("stock_info.pkl.zip")
-monthly = pd.read_pickle("measures_monthly.pkl.zip")
 
+measures = pd.read_pickle("clean_data/measures_qtrly.pkl.zip")
+stock_info = pd.read_pickle("clean_data/stock_info.pkl.zip")
+monthly = pd.read_pickle("clean_data/measures_monthly.pkl.zip")
+
+# import, set data types & export Research & Development data
+data_type = {'filing': str, 'ticker':str}
+rd_data = pd.read_csv('clean_data/R&D_data.csv', dtype = data_type, parse_dates=(['Date']))
+rd_data.to_pickle( 'clean_data/R&D_data.pkl' )
+rd_data.dtypes
 
 #%%
 
@@ -61,11 +81,11 @@ monthly_1yr = monthly.query("date > '2020-01-29 00:00:00' and date < '2021-06-11
 # To help w/calculations... created smaller dataframe to drop NaN
  
 AP = financials_10yr[['CostOfRevenue','AccountsPayable']]
-print ( AP )
+#print ( AP )
 
 # Keep only records with data
 AP = AP.dropna()
-print( AP )
+#print( AP )
 
 #
 # Calculate Ratios with 'for' loop
@@ -84,7 +104,7 @@ for ticker in companies:
    
     # reset index because of trouble doing .diff() calc w/ 'date' in the index
     temp = temp.reset_index()
-    temp['days'] = temp['date'].diff()
+    temp['days'] = -1* temp['date'].diff()
         # convert nanoseconds to days
     temp['days'] = temp['days'].astype('timedelta64[D]')
   
@@ -106,48 +126,38 @@ for ticker in companies:
 
     apt = apt.append( temp )
     
-print ( apt )
+#print ( apt )
+apt.to_pickle('clean_data/apt.pkl')
 
+
+    
 #%%
 
 ##
-## Import & format R&D data
+## Stock & ROIs - Normalize Stock prices & calculate ROI 
 ##
 
-data_type = {'filing': str, 'ticker':str}
-RD_data = pd.read_csv('R&D_data.csv', dtype = data_type)
+companies = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX', 'SPX']
 
-#  Format data types
-RD_data.dtypes
-RD_data['Date'] = pd.to_datetime(RD_data['Date'])   # keep only the date, remove hr/min/sec
-RD_data['Date'] = RD_data['Date'].dt.date   # keep only the date, remove hr/min/sec
-RD_data.dtypes
 
-#%%
+# collect ROIs for all timeframes
+all_ROIs = pd.DataFrame( companies, columns= ['ticker'] )
 
-##
-## Stock - Normalize Stock prices & calculate ROI 
-##
-
-#%%
-
+####
 #
-#  Stock Calcs - 10 YR 
+#  Stock & ROI Calcs - 10 YR 
 #
+
+#print('If you purchased 1 stock in 2/2011 & sold it in 6/2021.')
+
 
 # Normalize stock price plus ROI
 stock_info_10yr = pd.DataFrame()
 
-# To collect final ROI
-finalROIs = pd.DataFrame()
-    # My vision for 'finalROIs' is:
-            #           10yrROI     10yrROI_including Dividends .... 5yrROI
-            # Ticker
-            # LMT
-            # BA
-            # ...
-            # GE
-print('If you purchased 1 stock in 2/2011 & sold it in 6/2021.')
+# To collect ROIs
+roi = []
+roi_div = []
+roi_diff= []
 
 for ticker in companies:
   
@@ -165,28 +175,49 @@ for ticker in companies:
     # calculate ROI with $100 dollar investment
     temp['ROI'] = 100* (( temp['Close'] - start_date['Close'] ) / start_date['Close'] )
     
+    # append new dataframe
     stock_info_10yr = stock_info_10yr.append( temp )
     
     # total ROI plus dividends
     end_date = temp.iloc[0]
-    total_ROI = 100* (( end_date['Close'] - start_date['Close'] + temp['Dividends'].sum()) / start_date['Close'] )
+    temp_roi_div = 100* (( end_date['Close'] - start_date['Close'] + temp['Dividends'].sum()) / start_date['Close'] )
+    temp_roi = end_date['ROI']
     
-    print('Stock:',tick,
-          '| ROI:', round(end_date['ROI']),
-          '%| ROI plus dividends', round(total_ROI),"%")
-    #finalROI_10yr = finalROI_10yr.append( total_ROI )
-    
-#print( stock_info_10yr )
+    # difference between ROI w/ & w/o dividends
+    diff =  (temp_roi_div-temp_roi)
+
+    # add ROIs to list
+    roi.append( temp_roi )
+    roi_div.append( temp_roi_div )
+    roi_diff.append( diff )
+
+# Create ROI dictionaries
+
+dic_roi = dict(zip(companies,roi))
+dic_roi_div = dict(zip(companies,roi_div))
+dic_roi_diff = dict(zip(companies, roi_diff ))
+
+# Add dictionaries to dataframe
+
+all_ROIs['roi_10yr'] = all_ROIs['ticker'].map( dic_roi )
+all_ROIs['roi_div_10yr'] = all_ROIs['ticker'].map( dic_roi_div )
+all_ROIs['roi_%diff_10yr'] = all_ROIs['ticker'].map( dic_roi_diff )
 
 #%%
+####
 #
-#  Stock Calcs - 5 YR 
+#  Stock & ROI Calcs - 5 YR 
 #
+
+#print('If you purchased 1 stock in 2/2016 & sold it in 6/2021.')
 
 # Normalize stock price plus ROI
 stock_info_5yr = pd.DataFrame()
 
-print('If you purchased 1 stock in 2/2016 & sold it in 6/2021.')
+# To collect ROIs
+roi = []
+roi_div = []
+roi_diff = []
 
 for ticker in companies:
   
@@ -208,23 +239,44 @@ for ticker in companies:
     
     # total ROI plus dividends
     end_date = temp.iloc[0]
-    total_ROI = 100* (( end_date['Close'] - start_date['Close'] + temp['Dividends'].sum()) / start_date['Close'] )
-    
-    print('Stock:',tick,
-          '| ROI:', round(end_date['ROI']),
-          '%| ROI plus dividends', round(total_ROI),"%")
+    temp_roi_div = 100* (( end_date['Close'] - start_date['Close'] + temp['Dividends'].sum()) / start_date['Close'] )
+    temp_roi = end_date['ROI']
 
-#print( stock_info_5yr )
+    # difference between ROI w/ & w/o dividends
+    diff =  (temp_roi_div-temp_roi)
+    
+    # add ROIs to list
+    roi.append( temp_roi )
+    roi_div.append( temp_roi_div )
+    roi_diff.append( diff )
+
+# Create ROI dictionaries
+
+dic_roi = dict(zip(companies,roi))
+dic_roi_div = dict(zip(companies,roi_div))
+dic_roi_diff = dict(zip(companies, roi_diff ))
+
+# Add dictionaries to dataframe
+
+all_ROIs['roi_5yr'] = all_ROIs['ticker'].map( dic_roi )
+all_ROIs['roi_div_5yr'] = all_ROIs['ticker'].map( dic_roi_div )
+all_ROIs['roi_%diff_5yr'] = all_ROIs['ticker'].map( dic_roi_diff )
 
 #%%
+####
 #
-#  Stock Calcs - 3 YR 
+#  Stock & ROI Calcs - 3 YR 
 #
+
+#print('If you purchased 1 stock in 2/2018 & sold it in 6/2021.')
 
 # Normalize stock price plus ROI
 stock_info_3yr = pd.DataFrame()
 
-print('If you purchased 1 stock in 2/2018 & sold it in 6/2021.')
+# To collect ROIs
+roi = []
+roi_div = []
+roi_diff = []
 
 for ticker in companies:
   
@@ -246,23 +298,44 @@ for ticker in companies:
     
     # total ROI plus dividends
     end_date = temp.iloc[0]
-    total_ROI = 100* (( end_date['Close'] - start_date['Close'] + temp['Dividends'].sum()) / start_date['Close'] )
-    
-    print('Stock:',tick,
-          '| ROI:', round(end_date['ROI']),
-          '%| ROI plus dividends', round(total_ROI),"%")
+    temp_roi_div = 100* (( end_date['Close'] - start_date['Close'] + temp['Dividends'].sum()) / start_date['Close'] )
+    temp_roi = end_date['ROI']
 
-#print( stock_info_5yr )
+    # difference between ROI w/ & w/o dividends
+    diff =  (temp_roi_div-temp_roi)
+    
+    # add ROIs to list
+    roi.append( temp_roi )
+    roi_div.append( temp_roi_div )
+    roi_diff.append( diff )
+
+# Create ROI dictionaries
+
+dic_roi = dict(zip(companies,roi))
+dic_roi_div = dict(zip(companies,roi_div))
+dic_roi_diff = dict(zip(companies, roi_diff ))
+
+# Add dictionaries to dataframe
+
+all_ROIs['roi_3yr'] = all_ROIs['ticker'].map( dic_roi )
+all_ROIs['roi_div_3yr'] = all_ROIs['ticker'].map( dic_roi_div )
+all_ROIs['roi_%diff_3yr'] = all_ROIs['ticker'].map( dic_roi_diff )
 
 #%%
+#####
 #
-#  Stock Calcs - 1 YR 
+#  Stock & ROI Calcs - 1 YR 
 #
+
+#print('If you purchased 1 stock in 2/2020 & sold it in 6/2021.')
 
 # Normalize stock price plus ROI
 stock_info_1yr = pd.DataFrame()
 
-print('If you purchased 1 stock in 2/2020 & sold it in 6/2021.')
+# To collect ROIs
+roi = []
+roi_div = []
+roi_diff = []
 
 for ticker in companies:
   
@@ -284,14 +357,43 @@ for ticker in companies:
     
     # total ROI plus dividends
     end_date = temp.iloc[0]
-    total_ROI = 100* (( end_date['Close'] - start_date['Close'] + temp['Dividends'].sum()) / start_date['Close'] )
+    temp_roi_div = 100* (( end_date['Close'] - start_date['Close'] + temp['Dividends'].sum()) / start_date['Close'] )
+    temp_roi = end_date['ROI']
+
+    # difference between ROI w/ & w/o dividends
+    diff =  (temp_roi_div-temp_roi)
     
-    print('Stock:',tick,
-          '| ROI:', round(end_date['ROI']),
-          '%| ROI plus dividends', round(total_ROI),"%")
+    # add ROIs to list
+    roi.append( temp_roi )
+    roi_div.append( temp_roi_div )
+    roi_diff.append( diff )
 
-#print( stock_info_5yr )
+# Create ROI dictionaries
 
+dic_roi = dict(zip(companies,roi))
+dic_roi_div = dict(zip(companies,roi_div))
+dic_roi_diff = dict(zip(companies, roi_diff ))
+
+# Add dictionaries to dataframe
+
+all_ROIs['roi_1yr'] = all_ROIs['ticker'].map( dic_roi )
+all_ROIs['roi_div_1yr'] = all_ROIs['ticker'].map( dic_roi_div )
+all_ROIs['roi_%diff_1yr'] = all_ROIs['ticker'].map( dic_roi_diff )
+
+#%%
+####
+#
+# Export files
+#
+
+
+all_ROIs = all_ROIs.set_index('ticker')
+all_ROIs.to_pickle('clean_data/ROI_table.pkl')
+
+stock_info_1yr.to_pickle("clean_data/stocks_1yr.pkl")
+stock_info_3yr.to_pickle("clean_data/stocks_3yr.pkl")
+stock_info_5yr.to_pickle("clean_data/stocks_5yr.pkl")
+stock_info_10yr.to_pickle("clean_data/stocks_10yr.pkl")
 
 #%%
 
@@ -299,7 +401,6 @@ for ticker in companies:
 # ROA & ROE
 #
 
-#%%
 
 #
 # 10 yr
@@ -326,7 +427,7 @@ for ticker in companies:
     
     norm_fin_10yr = norm_fin_10yr.append( temp )
     
-print ( norm_fin_10yr )
+#print ( norm_fin_10yr )
 
 
 #%%
@@ -357,11 +458,11 @@ for ticker in companies:
     
     norm_fin_5yr = norm_fin_5yr.append( temp )
     
-print ( norm_fin_5yr )
+#print ( norm_fin_5yr )
 
 #%%
 #
-# 10 yr
+# 3 yr
 #
 
 norm = financials_3yr[['ROA','ROE']]
@@ -385,10 +486,11 @@ for ticker in companies:
     
     norm_fin_3yr = norm_fin_3yr.append( temp )
     
-print ( norm_fin_3yr )
+#print ( norm_fin_3yr )
+
 #%%
 #
-# 10 yr
+# 1 yr
 #
 
 norm = financials_1yr[['ROA','ROE']]
@@ -412,30 +514,45 @@ for ticker in companies:
     
     norm_fin_1yr = norm_fin_1yr.append( temp )
     
-print ( norm_fin_1yr )
+#print ( norm_fin_1yr )
+
 #%%
 #Pickle dfs for plotting in another file
 
-norm_fin_1yr.to_pickle("norm_fin_1yr.pkl")
-norm_fin_3yr.to_pickle("norm_fin_3yr.pkl")
-norm_fin_5yr.to_pickle("norm_fin_5yr.pkl")
-norm_fin_10yr.to_pickle("norm_fin_10yr.pkl")
+norm_fin_1yr.to_pickle("clean_data/norm_fin_1yr.pkl")
+norm_fin_3yr.to_pickle("clean_data/norm_fin_3yr.pkl")
+norm_fin_5yr.to_pickle("clean_data/norm_fin_5yr.pkl")
+norm_fin_10yr.to_pickle("clean_data/norm_fin_10yr.pkl")
 
-financials_1yr.to_pickle("financials_1yr.pkl")
-financials_3yr.to_pickle("financials_3yr.pkl")
-financials_5yr.to_pickle("financials_5yr.pkl")
-financials_10yr.to_pickle("financials_10yr.pkl")
+financials_1yr.to_pickle("clean_data/financials_1yr.pkl")
+financials_3yr.to_pickle("clean_data/financials_3yr.pkl")
+financials_5yr.to_pickle("clean_data/financials_5yr.pkl")
+financials_10yr.to_pickle("clean_data/financials_10yr.pkl")
 
-stock_info_1yr.to_pickle("stocks_1yr.pkl")
-stock_info_3yr.to_pickle("stocks_3yr.pkl")
-stock_info_5yr.to_pickle("stocks_5yr.pkl")
-stock_info_10yr.to_pickle("stocks_10yr.pkl")
+stock_info_1yr.to_pickle("clean_data/stocks_1yr.pkl")
+stock_info_3yr.to_pickle("clean_data/stocks_3yr.pkl")
+stock_info_5yr.to_pickle("clean_data/stocks_5yr.pkl")
+stock_info_10yr.to_pickle("clean_data/stocks_10yr.pkl")
 
-monthly_10yr.to_pickle("monthly_10yr.pkl")
-monthly_5yr.to_pickle("monthly_5yr.pkl")
-monthly_3yr.to_pickle("monthly_3yr.pkl")
-monthly_1yr.to_pickle("monthly_1yr.pkl")
+monthly_10yr.to_pickle("clean_data/monthly_10yr.pkl")
+monthly_5yr.to_pickle("clean_data/monthly_5yr.pkl")
+monthly_3yr.to_pickle("clean_data/monthly_3yr.pkl")
+monthly_1yr.to_pickle("clean_data/monthly_1yr.pkl")
 
-apt.to_pickle('apt.pkl')
+apt.to_pickle('clean_data/apt.pkl')
 
-RD_data.to_pickle('RD_data.pkl')
+all_ROIs.to_pickle('clean_data/ROI_table.pkl')
+
+#%%
+
+#
+# Housekeeping
+#
+
+print( '\nPart 2 = Great Success! Analysis & files exported.')
+
+end_time = datetime.datetime.now()
+
+time_diff = (end_time - start_time)
+
+print('\nTotal Processing Time:', time_diff, 'hr:min:secs\n')

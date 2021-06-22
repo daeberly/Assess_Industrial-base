@@ -13,6 +13,7 @@ Created on Sun Jun 13 18:04:46 2021
 # Data Source: SEC Filings & Yahoo Finance Premier .csv reports
 # .csv reports downloaded on 6.13.2021
 
+# Run this file before '2_analysis.py' 
 
 # File has 3 sections that produce:
 
@@ -134,7 +135,7 @@ print ( DIB_Financials )
 
 
 # import .csv with measures of interest
-keep = pd.read_csv('measures_toKeep.csv')
+keep = pd.read_csv('inputs/measures_toKeep.csv')
 
 # create a new dataframe with only those measures
 keep = keep.Measures.to_list()
@@ -143,7 +144,7 @@ measures = DIB_Financials[ keep ]
 #
 # export to .pkl file w/ zip compression added
 #
-measures.to_pickle("measures_qtrly.pkl.zip")
+measures.to_pickle("clean_data/measures_qtrly.pkl.zip")
 
 print('\n Financials exported to: measures_qrtly.pkl.zip')
 
@@ -254,7 +255,7 @@ print ( DIB_Financials )
 
 
 # import .csv with measures of interest
-keep = pd.read_csv('measures_toKeep_monthly.csv')
+keep = pd.read_csv('inputs/measures_toKeep_monthly.csv')
 
 # create a new dataframe with only those measures
 keep = keep.Measures.to_list()
@@ -263,7 +264,7 @@ measures = DIB_Financials[ keep ]
 #
 # export to .pkl file w/ zip compression added
 #
-measures.to_pickle("measures_monthly.pkl.zip")
+measures.to_pickle("clean_data/measures_monthly.pkl.zip")
 
 print('\n Financials exported to: measures_monthly.pkl.zip')
 
@@ -289,27 +290,29 @@ measures.to_csv(str(current) + '_sample_measures_monthly.csv')
 #pip install yfinance
 import yfinance as yf
 
-companies = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX','SPX', 'SPSIAD']
+stocks = ['LMT', 'RTX', 'BA' , 'GD', 'GE', 'HII', 'LHX','SPX', 'SPSIAD']
     # SPX = S&P 500 index.  
     # SPIAD = S&P 500 Aerospace & Defense Index
 
 stock_info = pd.DataFrame()
 
-for ticker in companies:
+for ticker in stocks:
     tick  = yf.Ticker(ticker)
     stock_hist = tick.history(period="max")
     stock_hist['ticker'] = ticker
     stock_info = stock_info.append( stock_hist )
 
-print('\n', stock_info.sample(10))
 stock_info.columns
 
 # set index
 stock_info = stock_info.reset_index() 
 stock_info = stock_info.set_index(['Date', 'ticker'])
+stock_info = stock_info.sort_values(by='Date', ascending= False)
+
+print('\n10 row sampling', stock_info.sample(10))
 
 # export to .pkl
-stock_info.to_pickle('stock_info.pkl.zip')
+stock_info.to_pickle('clean_data/stock_info.pkl.zip')
 
 print('\nStock prices exported to : stock_info.pkl.zip')
 
