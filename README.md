@@ -1,23 +1,25 @@
 # Assess the "health" of the Defense Industrial base
-This respository supports the research and analysis conducted during our gradute capstone project at the Syracuse University Maxwell School for the Government Accountability Office (GAO), Contracting and National Security Acquisition (CNSA) Team.
+This respository contains the analysis in support of our graduate student capstone project while attending Syracuse University's Maxwell School of Citizenship and Public Affairs. This project was sponsored by the Government Accountability Office (GAO), specifically the Contracting and National Security Acquisition (CNSA) Team.
 
-Our goal was to create an auditable, repeatable and customizable analysis. This repository was not a requested deliverable. The code here collects, combines, analyzes and plots financial data for eight financial measures on seven companies. Our analysis looks at four time periods - 10, 5, 3 and one year intervals. Customizable user-imputs can easily change our seven to 1,000s of companies and any number of financial measures or ratios. 
+Our goal was to create an auditable, repeatable and customizable analysis. This repository was not a requested deliverable. It supplements a 50+ page report submitted to the GAO on 6/25/21. The code here collects, combines, analyzes and plots financial data for eight financial measures on seven companies. Our analysis looks at four time periods - 10, 5, 3 and one year intervals. Customizable user-imputs can easily change our seven companies to 1,000s and to any number of financial measures or ratios. 
 
-Of note, USAspending federal contractor data was explored but results were not included in the report due to time-limitations of this project to confirm multi-year contracts were not counted more than once when aggregating results.
+Of note, USAspending federal contractor data was explored but results were not included in the report due to time-limitations of this project. We were unable to confirm multi-year contracts were not counted more than once when aggregating results and statistics per DoD prime contractor. Thus, results were omitted.
 
 ### Project Scope
 "Only using on publicaly available data, identify indicators to assess the health of the Defense Industrial base (DIB) to include a specific focus on impacts of COVID-19."
 
-Over 21 days, our research spanned from defense industry professionals to a former DOD Under Secretary on Industrial Policy to congressional and non-profit DIB studies. Large in scope, our project was refined to only financial indicators, mainly information derived from  SEC-10K (annual) and SEC-10Q (quarterly) balance sheets and qualitative measures. 
+Over 21 days, our research spanned from defense industry professionals to a former DOD Under Secretary on Industrial Policy to congressional and non-profit DIB studies. Large in scope, we refined our project to only financial indicators. This information was derived from SEC-10K (annual) and SEC-10Q (quarterly) balance sheets and sections of SEC filings dedicated to company risks. 
 
-In the end, we focused on eight financial indicators, risks identified in SEC-10Ks and used seven of the top Department of Defense prime contractors. Using only publicly available information, our analysis was limited to only U.S. publicly traded companies. Also, by focusing on seven companies, we assessed the validity and effectiveness of our financial measures. Overall, our measures provided a good overall financial assessment, but should be complimented by SEC-10K text to best understand trends. Lastly, health of DIB companies should be assess in relation to their commercial sector and not the DIB as a whole.
+In the end, we focused on eight financial indicators and risks identified in SEC-10Ks for seven of the top 100 Department of Defense prime contractors. Using only publicly available information, our analysis was limited to only U.S. publicly traded companies. Also, by focusing on seven companies, we were able to assess the validity and effectiveness of our financial measures. 
+
+Overall, our measures provided a good overall financial assessment, but should be complimented by SEC-10K text to best understand trends. Lastly, health of DIB companies should be assessed in relation to their commercial sector and not the DIB as a whole.
 
 DoD Primes evaluated:
 
 Lockheed Martin (LMT)   Boeing (BA)   L3Harris (LHX)  General Dynamics (GD)  
 Raytheon Technologies (RTX)  Huntington Ingalls (HII) General Electric (GE)
 
-Indicators...
+Indicators:
 
 *Overall Financial Health*: Return on Equity (ROE), Return on Assets (ROA), Market Cap, P/E Ratio, Stock Prices
 
